@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Watch With Me</title>
+    <!-- Latest compiled and minified CSS -->
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" 
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" 
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" 
+            crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+      #chat_container {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 320px;
+        z-index: 3;
+        background: #eeeeee;
+      }
+      #player_container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 320px;
+        bottom: 84px;
+        z-index: 4;
+        background: #000000;
+      }
+      #footer_container {
+        position: absolute;
+        bottom: 0;
+        right: 320px;
+        left: 0;
+        height: 84px;
+        z-index: 4;
+        background: #efeef1;
+      }
+      li.chat_username {
+        padding: 2px;
+        border:#000000;
+        border-width: 1px;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #e5e5e5; }
+    </style>
+  </head>
+  <body>
+    <div id="player_container">
+      <div id="player"></div>
+    </div>
+    <div id="chat_container">
+      <ul id="chat_userlist">
+      </ul>
+      <ul id="messages"></ul>
+      <form action="">
+        <input id="chat_input" autocomplete="off" /><button>Send</button>
+      </form>
+    </div>
+    <div id="footer_container">
+      <p>Footer stuff here</p>
+    </div>
+
+    <script>
+      var socket = io();
+
+/*
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '100%',
+          width: '100%',
+          playerVars: {
+            autoplay: 0,
+          },
+          events: {
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+      }
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+      function onPlayerStateChange(event) {
+        socket.emit('player_state_change', {
+          'player_state': player.getPlayerState(),
+          'current_time': player.getCurrentTime(),
+          'playback_rate': player.getPlaybackRate(),
+        });
+      }
+      */
+      socket.emit('join', "myname", "roomname"); 
+      
+      $('form').submit(function(){
+        socket.emit('message', $('#chat_input').val());
+        $('#chat_input').val('');
+        return false;
+      });
+
+      socket.on('message', function(msg) {
+        $('#messages').append($('<li>').text(msg));
+      });
+
+      socket.on('init', function(){
+        $('#messages').append($('<li>').text('[Debug: init]'));
+      });
+
+      socket.on('join_success', function(initial_state){
+        $('#messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
+
+        if('messages' in initial_state)
+        {
+          initial_state.messages.forEach(function(message){
+            $('#messages').append($('<li>').text(message));
+          });
+        }
+        initial_state.usernames
+      });
+
+      socket.on('change_owner', function(is_owner){
+        $('#messages').append($('<li>').text('[Debug: change_owner: ' + is_owner  + ']'));
+      });
+
+      socket.on('player_state_change', function(new_state){
+        $('#messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
+      });
+
+      socket.on('update_user_list', function(updated_userlist){
+        $('#chat_userlist').text('');
+        updated_userlist.forEach(function(username){
+          $('#chat_userlist').append($('<li class="chat_username">').text(username));
+        });
+      });
+    </script>
+  </body>
+</html>
