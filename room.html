@@ -19,21 +19,22 @@
   <style>
     #player_container {
       position: absolute;
+      overflow: hidden;
       left: 0;
       top: 0;
       right: 320px;
-      bottom: 84px;
+      bottom: 0px;
       z-index: 4;
       background: #000000;
     }
     
     #footer_container {
       position: absolute;
-      bottom: 0;
-      right: 320px;
-      left: 0;
       height: 84px;
-      z-index: 4;
+      right: 320px;
+      overflow-x: scroll;
+      bottom: 0;
+      left: 0;
       background: #efeef1;
     }
     
@@ -55,10 +56,30 @@
       width: 320px;
       font-size: 18px;
     }
-    
+
+    #playlist_header {
+      background: #ffffff;
+      height: 40px;
+      position: fixed;
+      top: 40px;
+      right: 0px;
+      width: 320px;
+      font-size: 18px;
+      padding: 5px;
+    }
+
+    #playlist_content {
+      position: absolute;
+      top: 80px;
+      right: 0px;
+      width: 320px;
+      height: 160px;
+      overflow-y: scroll;
+    }
+
     #chat_content {
       position: absolute;
-      top: 40px;
+      top: 240px;
       right: 0px;
       width: 320px;
       bottom: 45px;
@@ -93,7 +114,16 @@
       margin: 0;
       padding: 0;
     }
+
+    #playlist_items {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
     
+    li {
+      overflow-wrap: break-word;
+    }
     #chat_messages li {
       padding: 5px 10px;
     }
@@ -101,6 +131,35 @@
     #chat_messages li:nth-child(odd) {
       background: #e5e5e5;
     }
+
+    .playlist_thubnail {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      left: 15px;
+    }
+
+    .playlist_item {
+      left: 15px;
+      right: 0px;
+      height: 80px;
+      margin: 10px;
+
+      list-style-type: none;
+    }
+
+    .playlist_title {
+      position: absolute;
+      left: 84px;
+      right: 35px;
+    }
+
+    .playlist_item_remove {
+      float: right;
+      color: #d02626;
+    }
+
+
   </style>
 </head>
 
@@ -110,26 +169,41 @@
   </div>
   <div id="chat_container">
     <div id="chat_header" class="text-center well well-sm">
-      Unknown
+      Error
       <ul id="chat_userlist"></ul>
+    </div>
+    <div id="playlist_header">
+      <div class="form-group">
+        <form id="playlist_form" action="">
+          <div class="input-group">
+            <input id="playlist_input" class="form-control" type="text" autocomplete="off" placeholder="Video ID" />
+            <span class="input-group-btn">
+              <input type="button" class="btn btn-primary " data-toggle="modal" data-target="#myModal" value="+"/>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="playlist_content">
+      Error
+      <ul id="playlist_items" />
     </div>
     <div id="chat_content">
       <div id="chat_messages_container">
         <ul id="chat_messages"></ul>
       </div>
       <div id="chat_input_container" class="form-group">
-        <form action="">
+        <form action="" id="chat_form">
           <div class="input-group">
             <input id="chat_input" class="form-control" type="text" autocomplete="off" placeholder="Write your message here..." />
             <span class="input-group-btn">
-                <button class="btn btn-default" type="submit">Send</button>
-              </span>
+              <button class="btn btn-default" type="submit">Send</button>
+            </span>
           </div>
         </form>
       </div>
     </div>
     <div id="footer_container">
-      <p>Footer stuff here</p>
     </div>
 
     <script>
@@ -188,6 +262,14 @@
         socket.emit('player_state_change', new_player_state);
       };
 
+      function changeVideo() {
+        if(is_owner)
+        {
+          var new_id = input("New ID");
+          player.loadVideoById(new_id, 0, "large");
+        }
+      }
+
       var room_name = window.location.pathname.substr(6);
       var user_name = "Guest";
       var is_owner = false;
@@ -195,13 +277,23 @@
 
       socket.emit('join', user_name, room_name);
       
-      $('form').submit(function(){
+      $('#chat_form').submit(function(){
         var chat_input = $('#chat_input');
         if(chat_input.val().trim().length > 0)
         {
           socket.emit('message', chat_input.val(), '#ff0000');
         }
         chat_input.val('');
+        return false;
+      });
+
+      $('#playlist_form').submit(function(){
+        var video_id = $('#playlist_input');
+        if(video_id.val().trim().length > 0)
+        {
+          socket.emit('queue_playlist_item', video_id.val());
+        }
+        video_id.val('');
         return false;
       });
 
@@ -242,9 +334,10 @@
           return;
         }
 
-        if(player.videoId != new_state.videoId)
+        var video_data = player.getVideoData();
+        if(video_data.video_id != new_state.video_id)
         {
-          player.loadVideoById(new_state.videoId, new_state.current_time, "large");
+          player.loadVideoById(new_state.video_id, new_state.current_time, "large");
         }
         else
         {
@@ -278,6 +371,17 @@
         // updated_userlist.forEach(function(username){
         //   $('#chat_userlist').append($('<li class="chat_username">').text(username));
         // });
+      });
+
+      socket.on('update_playlist', function(updated_playlist){
+        $('#playlist_content').text('');
+        updated_playlist.forEach(function(item){
+          $('#playlist_content').append($('<li class="playlist_item well well-sm">').append(
+              '<img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail" />' +
+              '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
+              '<div class="playlist_item_remove glyphicon glyphicon-remove"></p>'
+          ));
+        });
       });
     </script>
 </body>

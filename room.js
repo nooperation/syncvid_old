@@ -7,6 +7,7 @@ var Room = function (room_name) {
   this.owner = null;
   this.users = [];
   this.usernames = [];
+  this.playlist = [];
 
   this.AddUser = function (user_socket) {
     this.users.push(user_socket);
@@ -16,9 +17,9 @@ var Room = function (room_name) {
     user_socket.valid = true;
 
     if (this.users.length == 1) {
-      this.SetOwner(user_socket); 
+      this.SetOwner(user_socket);
     }
-    
+
     user_socket.emit('join_success', {
       room_name: this.room_name,
       room_description: this.room_description,
@@ -26,18 +27,19 @@ var Room = function (room_name) {
     });
 
     this.SendUpdateUserList();
+    this.SendUpdatePlaylist();
     this.SendSystemMessage('"' + user_socket.user_name + '" has joined the room.');
   };
 
   this.RemoveUser = function (user_socket) {
     if (user_socket.room != this) {
-      console.error('User attempted to leave the wrong room.'); 
+      console.error('User attempted to leave the wrong room.');
       return;
     }
 
     user_index = this.users.indexOf(user_socket);
     if (user_index == -1) {
-      console.error('User attempted to leave room they were assigned to, but room has no knowledge of them.'); 
+      console.error('User attempted to leave room they were assigned to, but room has no knowledge of them.');
       return;
     }
 
@@ -50,28 +52,28 @@ var Room = function (room_name) {
         this.SetOwner(new_owner);
       }
       else {
-        console.log('Room "' + this.room_name + '" is now empty.'); 
+        console.log('Room "' + this.room_name + '" is now empty.');
       }
     }
 
-    this.SendUpdateUserList();    
+    this.SendUpdateUserList();
     this.SendSystemMessage('"' + user_socket.user_name + '" has left the room.');
 
     user_socket.leave(this.room_name);
     user_socket.room = null;
     user_socket.valid = false;
   };
-  
+
   this.SetOwner = function (new_owner) {
     if (this.owner != null) {
-      this.owner.emit('change_owner', false); 
+      this.owner.emit('change_owner', false);
     }
     this.owner = new_owner;
     new_owner.emit('change_owner', true);
-    
+
     this.SendSystemMessage('"' + this.owner.user_name + '" is now the owner of the room.');
   };
-  
+
   this.SendMessage = function (message, user_socket, user_color) {
     io.to(this.room_name).emit('message', 'USER', message, user_socket.user_name, user_color);
   };
@@ -84,12 +86,33 @@ var Room = function (room_name) {
     io.to(this.room_name).emit('update_user_list', this.usernames);
   };
 
+  this.SendUpdatePlaylist = function () {
+    io.to(this.room_name).emit('update_playlist', this.playlist);
+  };
+
   this.SetPlayerState = function (user_socket, new_state) {
     user_socket.broadcast.to(this.room_name).emit('player_state_change', new_state);
+  };
+
+  this.QueuePlaylistItem = function (user_socket, video_details) {
+    this.SendSystemMessage(user_socket.user_name + ' queued ' + video_details.title);
+
+    this.playlist.push(video_details);
+    this.SendUpdatePlaylist();
+
+    if (this.playlist.length == 1) {
+      io.to(this.room_name).emit('player_state_change', {
+        'video_id': video_details.video_id,
+        'player_state': 2,
+        'current_time': 0,
+        'playback_rate': 1,
+      });
+    }
+
   };
 };
 
 module.exports = function (io_handle) {
-    io = io_handle;
-    return Room;
+  io = io_handle;
+  return Room;
 };
