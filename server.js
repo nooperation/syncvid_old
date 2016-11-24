@@ -77,6 +77,22 @@ io.on('connection', function (socket) {
 
     socket.room.RemovePlaylistItem(socket, unique_id);
   });
+
+  socket.on('select_playlist_item', function (unique_id) {
+    if (socket.valid == false) {
+      return;
+    }
+
+    socket.room.SelectPlaylistItem(socket, unique_id);
+  });
+
+  socket.on('play_next_playlist_item', function () {
+    if (socket.valid == false) {
+      return;
+    }
+
+    socket.room.PlayNextPlaylistItem(socket);
+  });
 });
 
 

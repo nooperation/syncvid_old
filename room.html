@@ -148,6 +148,16 @@
       list-style-type: none;
     }
 
+    .playlist_item.Playing {
+      background-image: linear-gradient(to bottom,#a8c8a8 0,#c5f5c5 100%);
+    }
+    .playlist_item.Played {
+      background-image: linear-gradient(to bottom,#a8a8a8 0,#c5c5c5 100%);
+    }
+    .playlist_item.Queued {
+      background-image: linear-gradient(to bottom,#e8e8e8 0,#f5f5f5 100%);
+    }
+
     .playlist_title {
       position: absolute;
       left: 84px;
@@ -243,6 +253,9 @@
       //    the player should play for six seconds and then stop.
 
       function onPlayerStateChange(event) {
+        if(player.getPlayerState() == YT.PlayerState.ENDED) {
+          socket.emit('play_next_playlist_item');
+        }
         updateServerState();
       }
 
@@ -271,6 +284,10 @@
 
       function removePlaylistItem(item){
         socket.emit('remove_playlist_item', item);
+      }
+
+      function selectPlaylistItem(item){
+        socket.emit('select_playlist_item', item);
       }
 
       var room_name = window.location.pathname.substr(6);
@@ -367,7 +384,7 @@
             break;
         }
 
-        // $('#messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
+        //$('#chat_messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
       });
 
       socket.on('update_user_list', function(updated_userlist){
@@ -377,8 +394,17 @@
         // });
       });
 
+      socket.on('play_playlist_item', function(playlist_item_data){
+        if(player == null) {
+          return;
+        }
+
+        player.loadVideoById(playlist_item_data.video_id, 0, "default");
+      });
+
       socket.on('update_playlist', function(updated_playlist){
         $('#playlist_content').text('');
+
         if(updated_playlist.length == 0)
         {
           $('#playlist_content').append($('<li class="playlist_item panel panel-info">').append(
@@ -388,16 +414,23 @@
         }
         else
         {
+          var currently_playing = null;
+
           for(var i = 0; i < updated_playlist.length; ++i)
           {
             var item = updated_playlist[i];
+            if(item.state == 'Playing') {
+              currently_playing = item.unique_id;
+            }
 
-            $('#playlist_content').append($('<li class="playlist_item well well-sm">').append(
-                '<img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail" />' +
+            $('#playlist_content').append($('<li class="playlist_item well well-sm ' + item.state + '" id="' + item.unique_id + '">').append(
+                '<a onclick="selectPlaylistItem(\'' + item.unique_id + '\');"><img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail"/></a>' +
                 '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
                 '<a class="playlist_item_remove glyphicon glyphicon-remove" onclick="removePlaylistItem(\'' + item.unique_id + '\');" ></a>'
             ));
           }
+
+          //$('#' + currently_playing.unique_id).focus();
         }
       });
     </script>

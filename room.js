@@ -11,6 +11,7 @@ var Room = function (room_name) {
   this.users = [];
   this.usernames = [];
   this.playlist = [];
+  this.current_playlist_index = -1;
 
   this.AddUser = function (user_socket) {
     this.users.push(user_socket);
@@ -97,13 +98,52 @@ var Room = function (room_name) {
     user_socket.broadcast.to(this.room_name).emit('player_state_change', new_state);
   };
 
+  this.SelectPlaylistItem = function (user_socket, unique_id) {
+    var item_index_to_play = this.playlist.findIndex(function (item) {
+      return item.unique_id == unique_id;
+    });
+
+    if (item_index_to_play == -1) {
+      console.warn('Attempted to play an unknown video: ' + unique_id);
+      return;
+    }
+
+    var item_to_play = this.playlist[item_index_to_play];
+    this.SendSystemMessage(user_socket.user_name + ' changed to video "' + item_to_play.title + '"');
+    this.PlayPlaylistItem(item_index_to_play);
+  };
+
+  this.PlayPlaylistItem = function (item_index_to_play) {
+    if (item_index_to_play > this.playlist.length) {
+      this.SendSystemMessage("Unable to play item");
+      return;
+    }
+    this.current_playlist_index = item_index_to_play;
+
+    for (var i = 0; i < this.playlist.length; ++i) {
+      if (i == item_index_to_play) {
+        this.playlist[i].state = 'Playing';
+      }
+      else if (i > item_index_to_play) {
+        this.playlist[i].state = 'Queued';
+      }
+      else {
+        this.playlist[i].state = 'Played';
+      }
+    }
+
+    var item_to_play = this.playlist[item_index_to_play];
+    this.SendUpdatePlaylist();
+    io.to(this.room_name).emit('play_playlist_item', item_to_play);
+  };
+
   this.RemovePlaylistItem = function (user_socket, unique_id) {
     var item_index_to_remove = this.playlist.findIndex(function (item) {
       return item.unique_id == unique_id;
     });
 
     if (item_index_to_remove == -1) {
-      console.warn('Attempted to remove unknown video: ' + unique_id);
+      console.warn('Attempted to remove an unknown video: ' + unique_id);
       return;
     }
 
@@ -112,14 +152,21 @@ var Room = function (room_name) {
     this.playlist.splice(item_index_to_remove, 1);
     this.SendUpdatePlaylist();
 
-    if (this.playlist.length > 0 && item_index_to_remove == 0) {
-      io.to(this.room_name).emit('player_state_change', {
-        'video_id': this.playlist[0].video_id,
-        'player_state': -1,
-        'current_time': 0,
-        'playback_rate': 1,
-      });
+    if (this.playlist.length > 0 && item_index_to_remove == this.current_playlist_index) {
+      this.PlayNextPlaylistItem();
     }
+  };
+
+  this.PlayNextPlaylistItem = function (user_socket) {
+    for (var i = 0; i < this.playlist.length; ++i) {
+      if (this.playlist[i].state == 'Queued') {
+        this.SendSystemMessage('Playing next video: "' + this.playlist[i].title + '"');
+        this.PlayPlaylistItem(i);
+        return;
+      }
+    }
+    this.playlist[this.playlist.length - 1].state = 'Played';
+    this.SendSystemMessage('End of playlist');
   };
 
   this.QueuePlaylistItem = function (user_socket, video_id) {
@@ -139,17 +186,20 @@ var Room = function (room_name) {
       video_details.video_id = video_id;
       video_details.url = 'https://www.youtube.com/watch?v=' + video_id;
       video_details.unique_id = shortid.generate();
+      video_details.state = 'Queued';
+
+      var should_play_this_video = false;
+      if (this_room.playlist.length == 0 || this_room.playlist[this_room.playlist.length - 1].state == 'Played') {
+        should_play_this_video = true;
+      }
 
       this_room.playlist.push(video_details);
-      this_room.SendUpdatePlaylist();
 
-      if (this_room.playlist.length == 1) {
-        io.to(this_room.room_name).emit('player_state_change', {
-          'video_id': video_details.video_id,
-          'player_state': -1,
-          'current_time': 0,
-          'playback_rate': 1,
-        });
+      if (should_play_this_video) {
+        this_room.PlayNextPlaylistItem();
+      }
+      else {
+        this_room.SendUpdatePlaylist();
       }
     });
   };
