@@ -1,5 +1,6 @@
 
 var request = require('request');
+var shortid = require('shortid');
 
 var io = null;
 
@@ -96,6 +97,31 @@ var Room = function (room_name) {
     user_socket.broadcast.to(this.room_name).emit('player_state_change', new_state);
   };
 
+  this.RemovePlaylistItem = function (user_socket, unique_id) {
+    var item_index_to_remove = this.playlist.findIndex(function (item) {
+      return item.unique_id == unique_id;
+    });
+
+    if (item_index_to_remove == -1) {
+      console.warn('Attempted to remove unknown video: ' + unique_id);
+      return;
+    }
+
+    this.SendSystemMessage(user_socket.user_name + ' removed video "' + this.playlist[item_index_to_remove].title + '"'); 
+
+    this.playlist.splice(item_index_to_remove, 1);
+    this.SendUpdatePlaylist();
+
+    if (this.playlist.length > 0 && item_index_to_remove == 0) {
+      io.to(this.room_name).emit('player_state_change', {
+        'video_id': this.playlist[0].video_id,
+        'player_state': -1,
+        'current_time': 0,
+        'playback_rate': 1,
+      });
+    }
+  };
+
   this.QueuePlaylistItem = function (user_socket, video_id) {
     var address = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + video_id + '&format=json';
     var this_room = this;
@@ -112,6 +138,7 @@ var Room = function (room_name) {
 
       video_details.video_id = video_id;
       video_details.url = 'https://www.youtube.com/watch?v=' + video_id;
+      video_details.unique_id = shortid.generate();
 
       this_room.playlist.push(video_details);
       this_room.SendUpdatePlaylist();

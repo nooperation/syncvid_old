@@ -263,11 +263,14 @@
       };
 
       function changeVideo() {
-        if(is_owner)
-        {
+        if(is_owner) {
           var new_id = input("New ID");
           player.loadVideoById(new_id, 0, "large");
         }
+      }
+
+      function removePlaylistItem(item){
+        socket.emit('remove_playlist_item', item);
       }
 
       var room_name = window.location.pathname.substr(6);
@@ -288,12 +291,13 @@
       });
 
       $('#playlist_form').submit(function(){
-        var video_id = $('#playlist_input');
-        if(video_id.val().trim().length > 0)
+        var playlist_input = $('#playlist_input');
+        var video_id = playlist_input.val().trim();
+        if(video_id.length > 0)
         {
-          socket.emit('queue_playlist_item', video_id.val());
+          socket.emit('queue_playlist_item', video_id);
         }
-        video_id.val('');
+        playlist_input.val('');
         return false;
       });
 
@@ -379,18 +383,21 @@
         {
           $('#playlist_content').append($('<li class="playlist_item panel panel-info">').append(
             '<div class="panel-heading">Playlist is empty.</div>' +
-            '<div class="panel-body">Start by submitting a video id above.</div>'
+            '<div class="panel-body">Start by submitting a video id above. IVzH1iMfeh0 SlLFOrWvY_M</div>'
           ));
         }
         else
         {
-          updated_playlist.forEach(function(item){
+          for(var i = 0; i < updated_playlist.length; ++i)
+          {
+            var item = updated_playlist[i];
+
             $('#playlist_content').append($('<li class="playlist_item well well-sm">').append(
                 '<img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail" />' +
                 '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
-                '<div class="playlist_item_remove glyphicon glyphicon-remove"></p>'
+                '<a class="playlist_item_remove glyphicon glyphicon-remove" onclick="removePlaylistItem(\'' + item.unique_id + '\');" ></a>'
             ));
-          });
+          }
         }
       });
     </script>

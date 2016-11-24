@@ -69,6 +69,14 @@ io.on('connection', function (socket) {
 
     socket.room.QueuePlaylistItem(socket, video_id);
   });
+
+  socket.on('remove_playlist_item', function (unique_id) {
+    if (socket.valid == false) {
+      return;
+    }
+
+    socket.room.RemovePlaylistItem(socket, unique_id);
+  });
 });
 
 
