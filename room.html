@@ -89,7 +89,6 @@
     <script>
       var socket = io();
 
-/*
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
@@ -104,6 +103,7 @@
         player = new YT.Player('player', {
           height: '100%',
           width: '100%',
+          videoId: 'SlLFOrWvY_M',
           playerVars: {
             autoplay: 0,
           },
@@ -121,24 +121,38 @@
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
+
       function onPlayerStateChange(event) {
-        socket.emit('player_state_change', {
+        updateServerState();
+      }
+
+      function updateServerState(){
+        var video_data = player.getVideoData();
+        var new_player_state = {
+          'video_id': video_data.video_id,
           'player_state': player.getPlayerState(),
           'current_time': player.getCurrentTime(),
           'playback_rate': player.getPlaybackRate(),
-        });
-      }
-      */
-      socket.emit('join', "myname", "roomname"); 
+        };
+
+        socket.emit('player_state_change', new_player_state);
+      };
+
+      var room_name = window.location.pathname.substr(6);
+      var user_name = "Guest";
+      var is_owner = false;
+      var update_timer = null;
+
+      socket.emit('join', user_name, room_name);
       
       $('form').submit(function(){
-        socket.emit('message', $('#chat_input').val());
+        socket.emit('message', $('#chat_input').val(), '#ff0000');
         $('#chat_input').val('');
         return false;
       });
 
-      socket.on('message', function(msg) {
-        $('#messages').append($('<li>').text(msg));
+      socket.on('message', function(message_type, message, username, user_color) {
+        $('#messages').append($('<li>').append('<b style="color: ' + user_color + '">' + username + '</b>: ' + message));
       });
 
       socket.on('init', function(){
@@ -147,22 +161,54 @@
 
       socket.on('join_success', function(initial_state){
         $('#messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
-
         $('#chat_header').text(initial_state.room_name);
-        if('messages' in initial_state)
-        {
-          initial_state.messages.forEach(function(message){
-            $('#messages').append($('<li>').text(message));
-          });
-        }
       });
 
-      socket.on('change_owner', function(is_owner){
-        $('#messages').append($('<li>').text('[Debug: change_owner: ' + is_owner  + ']'));
+      socket.on('change_owner', function(is_new_owner){
+        is_owner = is_new_owner;
+
+        if(update_timer != null)
+        {
+          window.clearInterval(update_timer);
+        }
+
+        if(is_owner)
+        {
+          update_timer = window.setInterval(updateServerState, 1000);
+        }
+
+        $('#messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
       });
 
       socket.on('player_state_change', function(new_state){
-        $('#messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
+        if(player.videoId != new_state.videoId)
+        {
+          player.loadVideoById(new_state.videoId, new_state.current_time, "large");
+        }
+        else
+        {
+          var time_diff_from_host = Math.abs(player.getCurrentTime() - new_state.current_time);
+          if(time_diff_from_host > 2)
+          {
+            player.seekTo(new_state.current_time);
+          }
+
+          player.setPlaybackRate(new_state.playback_rate);
+        }
+
+        switch(new_state.player_state)
+        {
+          case YT.PlayerState.PLAYING:
+            player.playVideo();
+            break;
+          case YT.PlayerState.PAUSED:
+            player.pauseVideo();
+            break;
+          case YT.PlayerState.ENDED:
+            break;
+        }
+
+        // $('#messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
       });
 
       socket.on('update_user_list', function(updated_userlist){
