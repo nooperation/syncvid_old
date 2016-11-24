@@ -15,7 +15,7 @@ var Room = function (room_name) {
     user_socket.join(this.room_name);
     user_socket.valid = true;
 
-    if (this.owner == null) {
+    if (this.users.length == 1) {
       this.SetOwner(user_socket); 
     }
     

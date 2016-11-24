@@ -1,86 +1,132 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Watch With Me</title>
-    <!-- Latest compiled and minified CSS -->
-    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
-    
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-          crossorigin="anonymous">
-    <!-- Optional theme -->
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" 
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-          crossorigin="anonymous">
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" 
-            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" 
-            crossorigin="anonymous"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <style>
-      #chat_container {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 320px;
-        z-index: 3;
-        background: #eeeeee;
-      }
-      #player_container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 320px;
-        bottom: 84px;
-        z-index: 4;
-        background: #000000;
-      }
-      #footer_container {
-        position: absolute;
-        bottom: 0;
-        right: 320px;
-        left: 0;
-        height: 84px;
-        z-index: 4;
-        background: #efeef1;
-      }
-      li.chat_username {
-        padding: 2px;
-        border:#000000;
-        border-width: 1px;
-      }
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #e5e5e5; }
-    </style>
-  </head>
-  <body>
-    <div id="player_container">
-      <div id="player"></div>
+<head>
+  <title>Watch With Me</title>
+  <!-- Latest compiled and minified CSS -->
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+    crossorigin="anonymous">
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    #player_container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 320px;
+      bottom: 84px;
+      z-index: 4;
+      background: #000000;
+    }
+    
+    #footer_container {
+      position: absolute;
+      bottom: 0;
+      right: 320px;
+      left: 0;
+      height: 84px;
+      z-index: 4;
+      background: #efeef1;
+    }
+    
+    html,
+    body {
+      height: 100%;
+    }
+    
+    body {
+      margin: 0;
+    }
+    
+    #chat_header {
+      background: #ffffff;
+      height: 40px;
+      position: fixed;
+      top: 0px;
+      right: 0px;
+      width: 320px;
+      font-size: 18px;
+    }
+    
+    #chat_content {
+      position: absolute;
+      top: 40px;
+      right: 0px;
+      width: 320px;
+      bottom: 45px;
+      overflow-y: scroll;
+    }
+    
+    #chat_messages_container {
+      overflow: auto;
+    }
+    
+    #chat_input_container {
+      position: fixed;
+      bottom: 0px;
+      right: 0px;
+      width: 320px;
+      height: 45px;
+      padding: 5px;
+      margin: 0px;
+    }
+    
+    #chat_input_container .spacer {
+      padding: 5px;
+    }
+    
+    body {
+      font: 13px Helvetica, Arial;
+      margin: 0;
+    }
+    
+    #chat_messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    #chat_messages li {
+      padding: 5px 10px;
+    }
+    
+    #chat_messages li:nth-child(odd) {
+      background: #e5e5e5;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="player_container">
+    <div id="player"></div>
+  </div>
+  <div id="chat_container">
+    <div id="chat_header" class="text-center well well-sm">
+      Unknown
+      <ul id="chat_userlist"></ul>
     </div>
-    <div id="chat_container">
-      <div id="chat_header">
-        Unknown
+    <div id="chat_content">
+      <div id="chat_messages_container">
+        <ul id="chat_messages"></ul>
       </div>
-      <div>
-        <ul id="chat_userlist"></ul>
+      <div id="chat_input_container" class="form-group">
+        <form action="">
+          <div class="input-group">
+            <input id="chat_input" class="form-control" type="text" autocomplete="off" placeholder="Write your message here..." />
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="submit">Send</button>
+              </span>
+          </div>
+        </form>
       </div>
-      <div>
-        <ul id="messages"></ul>
-      </div>
-      <form action="">
-        <input id="chat_input" autocomplete="off" /><button>Send</button>
-      </form>
     </div>
     <div id="footer_container">
       <p>Footer stuff here</p>
@@ -88,22 +134,22 @@
 
     <script>
       var socket = io();
-
+      var player = null;
+      
       // 2. This code loads the IFrame Player API code asynchronously.
-      var tag = document.createElement('script');
+      var player_tag = document.createElement('script');
 
-      tag.src = "https://www.youtube.com/iframe_api";
+      player_tag.src = "https://www.youtube.com/iframe_api";
       var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      firstScriptTag.parentNode.insertBefore(player_tag, firstScriptTag);
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
-      var player;
       function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
           height: '100%',
           width: '100%',
-          videoId: 'SlLFOrWvY_M',
+          videoId: '9cQT4urTlXM',
           playerVars: {
             autoplay: 0,
           },
@@ -127,6 +173,10 @@
       }
 
       function updateServerState(){
+        if(player == null) {
+          return;
+        }
+
         var video_data = player.getVideoData();
         var new_player_state = {
           'video_id': video_data.video_id,
@@ -146,21 +196,28 @@
       socket.emit('join', user_name, room_name);
       
       $('form').submit(function(){
-        socket.emit('message', $('#chat_input').val(), '#ff0000');
-        $('#chat_input').val('');
+        var chat_input = $('#chat_input');
+        if(chat_input.val().trim().length > 0)
+        {
+          socket.emit('message', chat_input.val(), '#ff0000');
+        }
+        chat_input.val('');
         return false;
       });
 
       socket.on('message', function(message_type, message, username, user_color) {
-        $('#messages').append($('<li>').append('<b style="color: ' + user_color + '">' + username + '</b>: ' + message));
+        $('#chat_messages').append($('<li>').append('<b style="color: ' + user_color + '">' + username + '</b>: ' + message));
+
+        var objDiv = document.getElementById("chat_content");
+        objDiv.scrollTop = objDiv.scrollHeight;
       });
 
       socket.on('init', function(){
-        $('#messages').append($('<li>').text('[Debug: init]'));
+        $('#chat_messages').append($('<li>').text('[Debug: init]'));
       });
 
       socket.on('join_success', function(initial_state){
-        $('#messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
+        $('#chat_messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
         $('#chat_header').text(initial_state.room_name);
       });
 
@@ -177,10 +234,14 @@
           update_timer = window.setInterval(updateServerState, 1000);
         }
 
-        $('#messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
+        $('#chat_messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
       });
 
       socket.on('player_state_change', function(new_state){
+        if(player == null) {
+          return;
+        }
+
         if(player.videoId != new_state.videoId)
         {
           player.loadVideoById(new_state.videoId, new_state.current_time, "large");
@@ -188,11 +249,12 @@
         else
         {
           var time_diff_from_host = Math.abs(player.getCurrentTime() - new_state.current_time);
-          if(time_diff_from_host > 2)
+          if(time_diff_from_host > 0.20)
           {
             player.seekTo(new_state.current_time);
+            $('#chat_messages').append($('<li>').text('[Debug: Resyncing ' + (1000*time_diff_from_host.toFixed(2))  + 'ms > 200ms]'));
           }
-
+            
           player.setPlaybackRate(new_state.playback_rate);
         }
 
@@ -212,11 +274,12 @@
       });
 
       socket.on('update_user_list', function(updated_userlist){
-        $('#chat_userlist').text('');
-        updated_userlist.forEach(function(username){
-          $('#chat_userlist').append($('<li class="chat_username">').text(username));
-        });
+        //$('#chat_userlist').text('');
+        // updated_userlist.forEach(function(username){
+        //   $('#chat_userlist').append($('<li class="chat_username">').text(username));
+        // });
       });
     </script>
-  </body>
+</body>
+
 </html>
