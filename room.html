@@ -224,7 +224,7 @@
         player = new YT.Player('player', {
           height: '100%',
           width: '100%',
-          videoId: '9cQT4urTlXM',
+          videoId: null,
           playerVars: {
             autoplay: 0,
           },
@@ -317,11 +317,11 @@
       });
 
       socket.on('init', function(){
-        $('#chat_messages').append($('<li>').text('[Debug: init]'));
+        //$('#chat_messages').append($('<li>').text('[Debug: init]'));
       });
 
       socket.on('join_success', function(initial_state){
-        $('#chat_messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
+        //$('#chat_messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
         $('#chat_header').text(initial_state.room_name);
       });
 
@@ -338,7 +338,7 @@
           update_timer = window.setInterval(updateServerState, 1000);
         }
 
-        $('#chat_messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
+        //$('#chat_messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
       });
 
       socket.on('player_state_change', function(new_state){
@@ -357,7 +357,7 @@
           if(time_diff_from_host > 0.20)
           {
             player.seekTo(new_state.current_time);
-            $('#chat_messages').append($('<li>').text('[Debug: Resyncing ' + (1000*time_diff_from_host.toFixed(2))  + 'ms > 200ms]'));
+            //$('#chat_messages').append($('<li>').text('[Debug: Resyncing ' + (1000*time_diff_from_host.toFixed(2))  + 'ms > 200ms]'));
           }
             
           player.setPlaybackRate(new_state.playback_rate);
@@ -400,7 +400,7 @@
         {
           $('#playlist_content').append($('<li class="playlist_item panel panel-info">').append(
             '<div class="panel-heading">Playlist is empty.</div>' +
-            '<div class="panel-body">Start by submitting a video id above. IVzH1iMfeh0 SlLFOrWvY_M</div>'
+            '<div class="panel-body">Start by submitting a video id above.</div>'
           ));
         }
         else
