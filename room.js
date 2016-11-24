@@ -1,4 +1,6 @@
 
+var request = require('request');
+
 var io = null;
 
 var Room = function (room_name) {
@@ -94,21 +96,35 @@ var Room = function (room_name) {
     user_socket.broadcast.to(this.room_name).emit('player_state_change', new_state);
   };
 
-  this.QueuePlaylistItem = function (user_socket, video_details) {
-    this.SendSystemMessage(user_socket.user_name + ' queued ' + video_details.title);
+  this.QueuePlaylistItem = function (user_socket, video_id) {
+    var address = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + video_id + '&format=json';
+    var this_room = this;
 
-    this.playlist.push(video_details);
-    this.SendUpdatePlaylist();
+    request(address, function (error, response, body) {
+      try {
+        var video_details = JSON.parse(body);
+        this_room.SendSystemMessage(user_socket.user_name + ' queued ' + video_details.title);
+      }
+      catch (e) {
+        this_room.SendSystemMessage(user_socket.user_name + ' queued invalid video id: ' + video_id);
+        return;
+      }
 
-    if (this.playlist.length == 1) {
-      io.to(this.room_name).emit('player_state_change', {
-        'video_id': video_details.video_id,
-        'player_state': 2,
-        'current_time': 0,
-        'playback_rate': 1,
-      });
-    }
+      video_details.video_id = video_id;
+      video_details.url = 'https://www.youtube.com/watch?v=' + video_id;
 
+      this_room.playlist.push(video_details);
+      this_room.SendUpdatePlaylist();
+
+      if (this_room.playlist.length == 1) {
+        io.to(this_room.room_name).emit('player_state_change', {
+          'video_id': video_details.video_id,
+          'player_state': -1,
+          'current_time': 0,
+          'playback_rate': 1,
+        });
+      }
+    });
   };
 };
 

@@ -178,7 +178,7 @@
           <div class="input-group">
             <input id="playlist_input" class="form-control" type="text" autocomplete="off" placeholder="Video ID" />
             <span class="input-group-btn">
-              <input type="button" class="btn btn-primary " data-toggle="modal" data-target="#myModal" value="+"/>
+              <button class="btn btn-default" type="submit">Add</button>
             </span>
           </div>
         </form>
@@ -337,7 +337,7 @@
         var video_data = player.getVideoData();
         if(video_data.video_id != new_state.video_id)
         {
-          player.loadVideoById(new_state.video_id, new_state.current_time, "large");
+          player.loadVideoById(new_state.video_id, new_state.current_time, "default");
         }
         else
         {
@@ -375,13 +375,23 @@
 
       socket.on('update_playlist', function(updated_playlist){
         $('#playlist_content').text('');
-        updated_playlist.forEach(function(item){
-          $('#playlist_content').append($('<li class="playlist_item well well-sm">').append(
-              '<img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail" />' +
-              '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
-              '<div class="playlist_item_remove glyphicon glyphicon-remove"></p>'
+        if(updated_playlist.length == 0)
+        {
+          $('#playlist_content').append($('<li class="playlist_item panel panel-info">').append(
+            '<div class="panel-heading">Playlist is empty.</div>' +
+            '<div class="panel-body">Start by submitting a video id above.</div>'
           ));
-        });
+        }
+        else
+        {
+          updated_playlist.forEach(function(item){
+            $('#playlist_content').append($('<li class="playlist_item well well-sm">').append(
+                '<img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail" />' +
+                '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
+                '<div class="playlist_item_remove glyphicon glyphicon-remove"></p>'
+            ));
+          });
+        }
       });
     </script>
 </body>
