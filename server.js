@@ -93,7 +93,9 @@ io.on('connection', function (socket) {
       return;
     }
 
-    socket.room.PlayNextPlaylistItem(socket);
+    if (socket.room.owner == socket) {
+      socket.room.PlayNextPlaylistItem(socket);
+    }
   });
 });
 

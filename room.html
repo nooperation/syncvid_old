@@ -177,7 +177,7 @@
       <div class="form-group">
         <form id="playlist_form" action="">
           <div class="input-group">
-            <input id="playlist_input" class="form-control" type="text" autocomplete="off" placeholder="Video ID" />
+            <input id="playlist_input" class="form-control" type="text" autocomplete="off" placeholder="Paste URL or ID here..." />
             <span class="input-group-btn">
               <button class="btn btn-default" type="submit">Add</button>
             </span>
@@ -244,9 +244,14 @@
       //    the player should play for six seconds and then stop.
 
       function onPlayerStateChange(event) {
+        if(is_owner == false) {
+          return;
+        }
+
         if(player.getPlayerState() == YT.PlayerState.ENDED) {
           socket.emit('play_next_playlist_item');
         }
+
         updateServerState();
       }
 
@@ -310,18 +315,27 @@
       });
 
       socket.on('message', function(message_type, message, username, user_color) {
-        $('#chat_messages').append($('<li>').append('<b style="color: ' + user_color + '">' + username + '</b>: ' + message));
+        var element_username = $('<b>');
+        element_username.text(username);
+        element_username.css('color', user_color);
 
-        var objDiv = document.getElementById("chat_content");
-        objDiv.scrollTop = objDiv.scrollHeight;
+        var element_text = $('<span>');
+        element_text.text(': ' + message);
+
+        var element_message_container = $('<li>');
+        element_message_container.append(element_username);
+        element_message_container.append(element_text);
+
+        $('#chat_messages').append(element_message_container);
+
+        var chat_container = document.getElementById("chat_content");
+        chat_container.scrollTop = chat_container.scrollHeight;
       });
 
       socket.on('init', function(){
-        //$('#chat_messages').append($('<li>').text('[Debug: init]'));
       });
 
       socket.on('join_success', function(initial_state){
-        //$('#chat_messages').append($('<li>').text('[Debug: join_success: ' + JSON.stringify(initial_state)  + ']'));
         $('#chat_header').text(initial_state.room_name);
       });
 
@@ -337,8 +351,6 @@
         {
           update_timer = window.setInterval(updateServerState, 1000);
         }
-
-        //$('#chat_messages').append($('<li>').text('[Debug: change_owner: ' + is_new_owner  + ']'));
       });
 
       socket.on('player_state_change', function(new_state){
@@ -357,7 +369,6 @@
           if(time_diff_from_host > 0.20)
           {
             player.seekTo(new_state.current_time);
-            //$('#chat_messages').append($('<li>').text('[Debug: Resyncing ' + (1000*time_diff_from_host.toFixed(2))  + 'ms > 200ms]'));
           }
             
           player.setPlaybackRate(new_state.playback_rate);
@@ -374,15 +385,9 @@
           case YT.PlayerState.ENDED:
             break;
         }
-
-        //$('#chat_messages').append($('<li>').text('[Debug: state: ' + JSON.stringify(new_state)  + ']'));
       });
 
       socket.on('update_user_list', function(updated_userlist){
-        //$('#chat_userlist').text('');
-        // updated_userlist.forEach(function(username){
-        //   $('#chat_userlist').append($('<li class="chat_username">').text(username));
-        // });
       });
 
       socket.on('play_playlist_item', function(playlist_item_data){
@@ -398,9 +403,10 @@
 
         if(updated_playlist.length == 0)
         {
-          $('#playlist_content').append($('<li class="playlist_item panel panel-info">').append(
+          $('#playlist_content').append($('<li class="playlist_item panel panel-info">' +
             '<div class="panel-heading">Playlist is empty.</div>' +
-            '<div class="panel-body">Start by submitting a video id above.</div>'
+            '<div class="panel-body">Start by submitting a video id above.</div>' +
+            '</li>'
           ));
         }
         else
@@ -414,14 +420,32 @@
               currently_playing = item.unique_id;
             }
 
-            $('#playlist_content').append($('<li class="playlist_item well well-sm ' + item.state + '" id="' + item.unique_id + '">').append(
-                '<a onclick="selectPlaylistItem(\'' + item.unique_id + '\');"><img src="' + item.thumbnail_url + '" class="img-thumbnail playlist_thubnail"/></a>' +
-                '<a class="playlist_title" href="' + item.url + '" target="self">' + ((item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title) + '</a>' +
-                '<a class="playlist_item_remove glyphicon glyphicon-remove" onclick="removePlaylistItem(\'' + item.unique_id + '\');" ></a>'
-            ));
-          }
+            var truncated_title = (item.title.length > 95) ? (item.title.substr(0, 95) + '...') : item.title;
 
-          //$('#' + currently_playing.unique_id).focus();
+            var element_thumbnail_link_image = $('<img class="img-thumbnail playlist_thubnail">');
+            element_thumbnail_link_image.attr('src', item.thumbnail_url);
+
+            var element_thumbnail_link = $('<a>');
+            element_thumbnail_link.attr('onclick', 'selectPlaylistItem(\'' + item.unique_id + '\');');
+            element_thumbnail_link.append(element_thumbnail_link_image);
+
+            var element_thumbnail_text = $('<a class="playlist_title">');
+            element_thumbnail_text.attr('target', 'self');
+            element_thumbnail_text.attr('href', item.url);
+            element_thumbnail_text.text(truncated_title);
+
+            var element_thumbnail_button = $('<a class="playlist_item_remove glyphicon glyphicon-remove">');
+            element_thumbnail_button.attr('onclick', 'removePlaylistItem(\'' + item.unique_id + '\');');
+
+            var element_playlist_item_container = $('<li>');
+            element_playlist_item_container.attr('class', 'playlist_item well well-sm ' + item.state);
+            element_playlist_item_container.attr('id', item.unique_id);
+            element_playlist_item_container.append(element_thumbnail_link);
+            element_playlist_item_container.append(element_thumbnail_text);
+            element_playlist_item_container.append(element_thumbnail_button);
+
+            $('#playlist_content').append(element_playlist_item_container);
+          }
         }
       });
     </script>

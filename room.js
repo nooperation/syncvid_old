@@ -165,11 +165,37 @@ var Room = function (room_name) {
         return;
       }
     }
-    this.playlist[this.playlist.length - 1].state = 'Played';
+    if (this.playlist.length > 0) {
+      this.playlist[this.playlist.length - 1].state = 'Played';
+    }
     this.SendSystemMessage('End of playlist');
   };
 
-  this.QueuePlaylistItem = function (user_socket, video_id) {
+  this.GetVideoIdFromUrl = function (video_url) {
+    var pattern_video_id = /^([a-z0-9A-Z\-_]+)/;
+    var match_video_id = video_url.match(pattern_video_id);
+    if (match_video_id && match_video_id[1].length >= 11) {
+      return match_video_id[1];
+    }
+
+    // http://stackoverflow.com/a/9102270
+    var pattern_video_url = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    var match_url = video_url.match(pattern_video_url);
+    if (match_url && match_url[2].length >= 11) {
+      return match_url[2];
+    }
+    else {
+      return null;
+    }
+  };
+
+  this.QueuePlaylistItem = function (user_socket, video_url) {
+    var video_id = this.GetVideoIdFromUrl(video_url);
+    if (video_id == null) {
+      this.SendSystemMessage(user_socket.user_name + ' queued invalid url: ' + video_url);
+      return;
+    }
+
     var address = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + video_id + '&format=json';
     var this_room = this;
 
