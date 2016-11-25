@@ -366,7 +366,7 @@
         else
         {
           var time_diff_from_host = Math.abs(player.getCurrentTime() - new_state.current_time);
-          if(time_diff_from_host > 0.20)
+          if(time_diff_from_host > 1)
           {
             player.seekTo(new_state.current_time);
           }
