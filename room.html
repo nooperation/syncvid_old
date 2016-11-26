@@ -287,7 +287,7 @@
       }
 
       var room_name = window.location.pathname.substr(6);
-      var user_name = "Guest";
+      var user_name = null;
       var is_owner = false;
       var update_timer = null;
 
@@ -333,6 +333,7 @@
       });
 
       socket.on('init', function(){
+
       });
 
       socket.on('join_success', function(initial_state){
@@ -387,7 +388,12 @@
         }
       });
 
+      socket.on('change_username_result', function(result, message){
+        // TODO: implement name changing
+      });
+
       socket.on('update_user_list', function(updated_userlist){
+        // TODO: remove?
       });
 
       socket.on('play_playlist_item', function(playlist_item_data){

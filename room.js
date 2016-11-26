@@ -229,6 +229,38 @@ var Room = function (room_name) {
       }
     });
   };
+
+  this.ChangeUsername = function (user_socket, new_username) {
+    if (new_username.trim().length == 0 || this.IsUsernameInUse(new_username)) {
+      user_socket.emit('change_username_result', false);
+      return;
+    }
+
+    var old_username = user_socket.user_name;
+    var username_index = this.usernames.indexOf(old_username);
+    if (username_index == -1) {
+      console.warn('Unknown user ' + old_username + ' attempted to change name to ' + new_username);
+      user_socket.emit('change_username_result', false);
+      return;
+    }
+
+    this.usernames[username_index] = new_username;
+    user_socket.user_name = new_username;
+    user_socket.emit('change_username_result', true);
+    this.SendSystemMessage(old_username + ' changed their name to ' + new_username);
+  };
+
+  this.IsUsernameInUse = function (username) {
+    var username_lowercase = username.toLowerCase();
+
+    for (var i = 0; i < this.usernames.length; ++i) {
+      if (this.usernames[i].toLowerCase() == username_lowercase) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 };
 
 module.exports = function (io_handle) {

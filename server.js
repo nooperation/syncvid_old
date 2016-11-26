@@ -3,6 +3,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var shortid = require('shortid');
 var Room = require('./room')(io);
+var generateName = require('sillyname');
 
 var rooms = {};
 
@@ -36,13 +37,26 @@ io.on('connection', function (socket) {
   socket.emit('init', 'Something');
 
   socket.on('join', function (user_name, room_name) {
-    socket.user_name = user_name;
-
     if (room_name in rooms == false) {
       console.log('Creating new room "' + room_name + '"');
       rooms[room_name] = new Room(room_name);
     }
     var room = rooms[room_name];
+
+    if (user_name == null || room.IsUsernameInUse(user_name)) {
+      for (var i = 0; i < 100; ++i) {
+        var temp_name = generateName();
+        if (room.IsUsernameInUse(temp_name) == false) {
+          user_name = temp_name;
+          break;
+        }
+      }
+      if (user_name == null) {
+        user_name = 'Guest';
+      }
+    }
+
+    socket.user_name = user_name;
     room.AddUser(socket);
   });
 
@@ -96,6 +110,14 @@ io.on('connection', function (socket) {
     if (socket.room.owner == socket) {
       socket.room.PlayNextPlaylistItem(socket);
     }
+  });
+
+  socket.on('change_username', function (new_username) {
+    if (socket.valid == false) {
+      return;
+    }
+
+    socket.room.ChangeUsername(socket, new_username);
   });
 });
 
