@@ -201,9 +201,9 @@
       <div class="form-group">
         <form id="playlist_form" action="">
           <div class="input-group">
-            <input id="playlist_input" class="form-control" type="text" autocomplete="off" placeholder="Paste URL or ID here..." />
+            <input id="playlist_input" class="form-control" type="text" autocomplete="off" disabled="true" placeholder="Paste URL or ID here..." />
             <span class="input-group-btn">
-              <button class="btn btn-default" type="submit">Add</button>
+              <button id="playlist_input_button" class="btn btn-default" type="submit" disabled="true">Add</button>
             </span>
           </div>
         </form>
@@ -252,13 +252,19 @@
     <script>
       var socket = io();
       var player = null;
+      var room_name = window.location.pathname.substr(6);
+      var user_name = null;
+      var is_owner = false;
+      var update_timer = null;
       
       // 2. This code loads the IFrame Player API code asynchronously.
       var player_tag = document.createElement('script');
-
       player_tag.src = "https://www.youtube.com/iframe_api";
+
       var firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(player_tag, firstScriptTag);
+
+      socket.emit('join', user_name, room_name);
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
@@ -269,6 +275,7 @@
           videoId: null,
           playerVars: {
             autoplay: 0,
+            iv_load_policy: 3
           },
           events: {
             'onStateChange': onPlayerStateChange
@@ -314,26 +321,28 @@
       };
 
       function changeVideo() {
-        if(is_owner) {
-          var new_id = input("New ID");
-          player.loadVideoById(new_id, 0, "large");
+        if(is_owner == false) {
+          return;
         }
+        var new_id = input("New ID");
+        player.loadVideoById(new_id, 0, "large");
       }
 
       function removePlaylistItem(item){
+        if(is_owner == false) {
+          return;
+        }
+
         socket.emit('remove_playlist_item', item);
       }
 
       function selectPlaylistItem(item){
+        if(is_owner == false) {
+          return;
+        }
+
         socket.emit('select_playlist_item', item);
       }
-
-      var room_name = window.location.pathname.substr(6);
-      var user_name = null;
-      var is_owner = false;
-      var update_timer = null;
-
-      socket.emit('join', user_name, room_name);
       
       $('#chat_form').submit(function(){
         var chat_input = $('#chat_input');
@@ -385,10 +394,6 @@
         chat_container.scrollTop = chat_container.scrollHeight;
       });
 
-      socket.on('init', function(){
-
-      });
-
       socket.on('join_success', function(initial_state){
         $('#chat_header').text(initial_state.room_name);
       });
@@ -396,14 +401,18 @@
       socket.on('change_owner', function(is_new_owner){
         is_owner = is_new_owner;
 
-        if(update_timer != null)
-        {
+        if(update_timer != null) {
           window.clearInterval(update_timer);
         }
 
-        if(is_owner)
-        {
+        if(is_owner) {
+          $('#playlist_input_button').prop('disabled', false);
+          $('#playlist_input').prop('disabled', false);
           update_timer = window.setInterval(updateServerState, 1000);
+        }
+        else{
+          $('#playlist_input_button').prop('disabled', true);
+          $('#playlist_input').prop('disabled', true);
         }
       });
 

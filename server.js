@@ -20,21 +20,17 @@ app.get('/room/:room_name', function (req, res) {
 });
 
 io.on('connection', function (socket) {
+  socket.user_name = null;
+  socket.room = null;
+  socket.valid = false;
+
   socket.on('disconnect', function () {
-    console.log('disconnect: ' + socket.user_name);
     if (socket.valid == false) {
       return;
     }
 
     socket.room.RemoveUser(socket);
   });
-
-  socket.user_name = null;
-  socket.room = null;
-  socket.valid = false;
-
-  console.log('New connection');
-  socket.emit('init', 'Something');
 
   socket.on('join', function (user_name, room_name) {
     if (room_name in rooms == false) {
@@ -83,7 +79,9 @@ io.on('connection', function (socket) {
       return;
     }
 
-    socket.room.QueuePlaylistItem(socket, video_id);
+    if (socket.room.owner == socket) {
+      socket.room.QueuePlaylistItem(socket, video_id);
+    }
   });
 
   socket.on('remove_playlist_item', function (unique_id) {
@@ -91,7 +89,9 @@ io.on('connection', function (socket) {
       return;
     }
 
-    socket.room.RemovePlaylistItem(socket, unique_id);
+    if (socket.room.owner == socket) {
+      socket.room.RemovePlaylistItem(socket, unique_id);
+    }
   });
 
   socket.on('select_playlist_item', function (unique_id) {
@@ -99,7 +99,9 @@ io.on('connection', function (socket) {
       return;
     }
 
-    socket.room.SelectPlaylistItem(socket, unique_id);
+    if (socket.room.owner == socket) {
+      socket.room.SelectPlaylistItem(socket, unique_id);
+    }
   });
 
   socket.on('play_next_playlist_item', function () {
