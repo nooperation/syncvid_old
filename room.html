@@ -185,6 +185,14 @@
       width: 280px;
       padding: 5px;
     }
+
+    .message_type_SYSTEM {
+      font-style: italic;
+    }
+
+    .message_type_USER {
+      font-style: normal;
+    }
   </style>
 </head>
 
@@ -377,15 +385,22 @@
       });
 
       socket.on('message', function(message_type, message, username, user_color) {
-        var element_username = $('<b>');
-        element_username.text(username);
-        element_username.css('color', user_color);
+        if(message_type == 'USER') {
+          var element_username = $('<b>');
+          element_username.text(username);
+          element_username.css('color', user_color);
+
+          message = ': ' + message;
+        }
 
         var element_text = $('<span>');
-        element_text.text(': ' + message);
+        element_text.text(message);
 
         var element_message_container = $('<li>');
-        element_message_container.append(element_username);
+        element_message_container.attr('class', 'message_type_' + message_type);
+        if(message_type == 'USER') {
+          element_message_container.append(element_username);
+        }
         element_message_container.append(element_text);
 
         $('#chat_messages').append(element_message_container);

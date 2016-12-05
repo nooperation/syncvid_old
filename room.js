@@ -32,7 +32,7 @@ var Room = function (room_name) {
 
     this.SendUpdateUserList();
     this.SendUpdatePlaylist();
-    this.SendSystemMessage('"' + user_socket.user_name + '" has joined the room.');
+    this.SendSystemMessage(user_socket.user_name + ' joined the room.');
   };
 
   this.RemoveUser = function (user_socket) {
@@ -61,7 +61,7 @@ var Room = function (room_name) {
     }
 
     this.SendUpdateUserList();
-    this.SendSystemMessage('"' + user_socket.user_name + '" has left the room.');
+    this.SendSystemMessage(user_socket.user_name + ' left the room.');
 
     user_socket.leave(this.room_name);
     user_socket.room = null;
@@ -75,7 +75,7 @@ var Room = function (room_name) {
     this.owner = new_owner;
     new_owner.emit('change_owner', true);
 
-    this.SendSystemMessage('"' + this.owner.user_name + '" is now the owner of the room.');
+    this.SendSystemMessage(this.owner.user_name + ' is now owner of the room.');
   };
 
   this.SendMessage = function (message, user_socket, user_color) {
@@ -109,13 +109,13 @@ var Room = function (room_name) {
     }
 
     var item_to_play = this.playlist[item_index_to_play];
-    this.SendSystemMessage(user_socket.user_name + ' changed to video "' + item_to_play.title + '"');
+    this.SendSystemMessage(user_socket.user_name + ' changed the video to "' + item_to_play.title + '"');
     this.PlayPlaylistItem(item_index_to_play);
   };
 
   this.PlayPlaylistItem = function (item_index_to_play) {
     if (item_index_to_play > this.playlist.length) {
-      this.SendSystemMessage("Unable to play item");
+      this.SendSystemMessage('Unable to play video');
       return;
     }
     this.current_playlist_index = item_index_to_play;
@@ -147,7 +147,7 @@ var Room = function (room_name) {
       return;
     }
 
-    this.SendSystemMessage(user_socket.user_name + ' removed video "' + this.playlist[item_index_to_remove].title + '"'); 
+    this.SendSystemMessage(user_socket.user_name + ' removed "' + this.playlist[item_index_to_remove].title + '" from the playlist');
 
     this.playlist.splice(item_index_to_remove, 1);
     this.SendUpdatePlaylist();
@@ -160,7 +160,7 @@ var Room = function (room_name) {
   this.PlayNextPlaylistItem = function (user_socket) {
     for (var i = 0; i < this.playlist.length; ++i) {
       if (this.playlist[i].state == 'Queued') {
-        this.SendSystemMessage('Playing next video: "' + this.playlist[i].title + '"');
+        this.SendSystemMessage('Now playing "' + this.playlist[i].title + '"');
         this.PlayPlaylistItem(i);
         return;
       }
@@ -192,7 +192,7 @@ var Room = function (room_name) {
   this.QueuePlaylistItem = function (user_socket, video_url) {
     var video_id = this.GetVideoIdFromUrl(video_url);
     if (video_id == null) {
-      this.SendSystemMessage(user_socket.user_name + ' queued invalid url: ' + video_url);
+      //this.SendSystemMessage(user_socket.user_name + ' queued invalid url: ' + video_url);
       return;
     }
 
@@ -202,10 +202,10 @@ var Room = function (room_name) {
     request(address, function (error, response, body) {
       try {
         var video_details = JSON.parse(body);
-        this_room.SendSystemMessage(user_socket.user_name + ' queued ' + video_details.title);
+        this_room.SendSystemMessage(user_socket.user_name + ' added "' + video_details.title + '"');
       }
       catch (e) {
-        this_room.SendSystemMessage(user_socket.user_name + ' queued invalid video id: ' + video_id);
+        this_room.SendSystemMessage(user_socket.user_name + ' added invalid video "' + video_id + '"');
         return;
       }
 
