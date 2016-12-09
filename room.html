@@ -19,112 +19,104 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    #player_container {
+    #chat_container {
       position: absolute;
-      overflow: hidden;
-      left: 0;
-      top: 0;
-      right: 320px;
+      display: table;
+      top: 0px;
+      right: 0px;
       bottom: 0px;
+      width: 320px;
+      height: 100%;
+    }
+
+    #player_container {
+      overflow: hidden;
+      height: 100%;
       z-index: 4;
       background: #000000;
     }
     
-    #footer_container {
-      position: absolute;
-      height: 84px;
-      right: 320px;
-      overflow-x: scroll;
-      bottom: 0;
-      left: 0;
-      background: #efeef1;
-    }
-    
-    html,
     body {
+      padding-right: 320px;
+      font: 13px Helvetica, Arial;
+    }
+
+    html, body {
       height: 100%;
     }
-    
-    body {
-      margin: 0;
+
+    #chat_header {
+      display: table-row;
+      height: 24px;
     }
     
-    #chat_header {
-      background: #ffffff;
-      height: 40px;
-      position: fixed;
-      top: 0px;
-      right: 0px;
-      width: 320px;
+    #chat_header_content {
       font-size: 18px;
+      margin: 0px;
     }
 
     #playlist_header {
-      background: #ffffff;
-      height: 40px;
-      position: fixed;
-      top: 40px;
-      right: 0px;
-      width: 320px;
-      font-size: 18px;
-      padding: 5px;
+      display: table-row;
+      height: 0px;
     }
 
-    #playlist_content {
-      position: absolute;
-      top: 80px;
-      right: 0px;
-      width: 320px;
+    #playlist_header_content {
+      background: #ffffff;
+      font-size: 18px;
+      padding: 5px;
+      margin: 0px;
+    }
+
+    #playlist_list {
       height: 160px;
+      display: table-row;
+    }
+
+    #playlist_list_content {
+      height: 100%;
       overflow-y: scroll;
     }
 
     #chat_content {
-      position: absolute;
-      top: 240px;
-      right: 0px;
-      width: 320px;
-      bottom: 45px;
-      overflow-y: scroll;
+      display: table-row;
     }
-    
-    #chat_messages_container {
-      overflow: auto;
-    }
-    
+
     #chat_input_container {
-      position: fixed;
-      bottom: 0px;
-      right: 0px;
-      width: 280px;
+      display: table-row;
       height: 45px;
+    }
+    #chat_input_container_content {
       padding: 5px;
       margin: 0px;
+    }
+    #chat_input {
+      border-top-left-radius: 0px;
+      border-bottom-left-radius: 0px;
+    }
+
+    #chat_form {
+      display: table-cell;
+    }
+
+    #chat_form .input-group {
+      width: 100%;
     }
 
     #chat_settings_container {
-      position: fixed;
-      bottom: 0px;
-      right: 282px;
-      width: 40px;
-      height: 45px;
-      padding: 5px;
-      margin: 0px;
+      display: table-cell;
     }
     
-    #chat_input_container .spacer {
-      padding: 5px;
+    #chat_container .spacer {
+      display: table-cell;
+      height: 5px;
     }
-    
-    body {
-      font: 13px Helvetica, Arial;
-      margin: 0;
-    }
-    
+
     #chat_messages {
       list-style-type: none;
-      margin: 0;
       padding: 0;
+      width: 320px;
+      height: 100%;
+      overflow-y: scroll;
     }
 
     #playlist_items {
@@ -147,43 +139,55 @@
     .playlist_thubnail {
       width: 64px;
       height: 64px;
-      position: absolute;
-      left: 15px;
+      max-width: 64px;
+      max-height: 64px;
+      margin-right: 5px;
     }
 
     .playlist_item {
       left: 15px;
       right: 0px;
       height: 80px;
-      margin: 10px;
-
+      margin: 0px 10px 10px 10px;
       list-style-type: none;
     }
 
     .playlist_item.Playing {
       background-image: linear-gradient(to bottom,#a8c8a8 0,#c5f5c5 100%);
+      display: flex;
     }
     .playlist_item.Played {
       background-image: linear-gradient(to bottom,#a8a8a8 0,#c5c5c5 100%);
+      display: flex;
     }
     .playlist_item.Queued {
       background-image: linear-gradient(to bottom,#e8e8e8 0,#f5f5f5 100%);
+      display: flex;
     }
 
     .playlist_title {
-      position: absolute;
-      left: 84px;
-      right: 35px;
+      display: table-cell;
+      width: 100%;
+      height: 64px;
+      padding: 0px;
+      margin-right: 5px;
+      margin-left: 5px;
+      overflow: hidden;
     }
 
     .playlist_item_remove {
-      float: right;
       color: #d02626;
     }
 
     .dropdown-menu.chat-settings {
       width: 280px;
       padding: 5px;
+    }
+
+    .chat_settings_button {
+      border-top-right-radius: 0px;
+      border-bottom-right-radius: 0px;
+      border-right-width: inherit;
     }
 
     .message_type_SYSTEM {
@@ -201,12 +205,13 @@
     <div id="player"></div>
   </div>
   <div id="chat_container">
-    <div id="chat_header" class="text-center well well-sm">
-      Error
-      <ul id="chat_userlist"></ul>
+    <div id="chat_header">
+      <div id="chat_header_content" class="text-center well well-sm">
+        Error
+      </div>
     </div>
     <div id="playlist_header">
-      <div class="form-group">
+      <div id="playlist_header_content" class="form-group">
         <form id="playlist_form" action="">
           <div class="input-group">
             <input id="playlist_input" class="form-control" type="text" autocomplete="off" disabled="true" placeholder="Paste URL or ID here..." />
@@ -217,18 +222,21 @@
         </form>
       </div>
     </div>
-    <div id="playlist_content">
+    <div id="playlist_list">
+      <div id="playlist_list_content">
       Error
-      <ul id="playlist_items" />
+      </div>
+    </div>
+    <div class="spacer">
     </div>
     <div id="chat_content">
-      <div id="chat_messages_container">
         <ul id="chat_messages"></ul>
-      </div>
-      <div id="chat_input_container">
+    </div>
+    <div id="chat_input_container">
+      <div id="chat_input_container_content">
         <span id="chat_settings_container" class="input-group-btn">
           <div class="dropup">
-            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" />
+            <button class="btn btn-default dropdown-toggle chat_settings_button" type="button" data-toggle="dropdown" />
             <span class="glyphicon glyphicon-wrench "></span></button>
             <ul class="dropdown-menu chat-settings">
               <li>
@@ -254,8 +262,7 @@
         </form>
       </div>
     </div>
-    <div id="footer_container">
-    </div>
+
 
     <script>
       var socket = io();
@@ -310,6 +317,16 @@
         }
 
         updateServerState();
+      }
+
+      function resizeChatWindow(width){
+        var body = $('body');
+        var chat_container = $('#chat_container');
+        var chat_messages = $('#chat_messages');
+
+        chat_container.css('width', width);
+        chat_messages.css('width', width);
+        body.css('padding-right', width);
       }
 
       function updateServerState(){
@@ -405,12 +422,12 @@
 
         $('#chat_messages').append(element_message_container);
 
-        var chat_container = document.getElementById("chat_content");
-        chat_container.scrollTop = chat_container.scrollHeight;
+        var chat_messages = document.getElementById("chat_messages");
+        chat_messages.scrollTop = chat_container.scrollHeight;
       });
 
       socket.on('join_success', function(initial_state){
-        $('#chat_header').text(initial_state.room_name);
+        $('#chat_header_content').text(initial_state.room_name);
       });
 
       socket.on('change_owner', function(is_new_owner){
@@ -482,11 +499,11 @@
       });
 
       socket.on('update_playlist', function(updated_playlist){
-        $('#playlist_content').text('');
+        $('#playlist_list_content').text('');
 
         if(updated_playlist.length == 0)
         {
-          $('#playlist_content').append($('<li class="playlist_item panel panel-info">' +
+          $('#playlist_list_content').append($('<li class="playlist_item panel panel-info">' +
             '<div class="panel-heading">Playlist is empty.</div>' +
             '<div class="panel-body">Start by submitting a video id above.</div>' +
             '</li>'
@@ -527,7 +544,7 @@
             element_playlist_item_container.append(element_thumbnail_text);
             element_playlist_item_container.append(element_thumbnail_button);
 
-            $('#playlist_content').append(element_playlist_item_container);
+            $('#playlist_list_content').append(element_playlist_item_container);
           }
         }
       });
