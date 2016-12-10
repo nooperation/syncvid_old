@@ -61,8 +61,10 @@
     }
 
     #chat_header {
-      display: table-row;
-      height: 24px;
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      left: 0px;
     }
     
     #chat_header_content {
@@ -71,8 +73,10 @@
     }
 
     #playlist_header {
-      display: table-row;
-      height: 0px;
+      position: absolute;
+      right: 0px;
+      top: 50px;
+      left: 0;
     }
 
     #playlist_header_content {
@@ -84,7 +88,10 @@
 
     #playlist_list {
       height: 160px;
-      display: table-row;
+      position: absolute;
+      right: 0px;
+      top: 100px;
+      left: 0px;
     }
 
     #playlist_list_content {
@@ -93,12 +100,19 @@
     }
 
     #chat_content {
-      display: table-row;
+      position: absolute;
+      bottom: 45px;
+      top: 265px;
+      left: 0px;
+      right: 0px;
     }
 
     #chat_input_container {
-      display: table-row;
-      height: 45px;
+      position: absolute;
+      bottom: 0px;
+      left: 0;
+      right: 0;
+      margin: 5px;
     }
     #chat_input_container_content {
       padding: 5px;
@@ -224,7 +238,7 @@
   <div id="player_container_with_seperator">
     <div id="player_container">
       <div id="player"></div>
-      <div id="seperator" />
+      <div id="seperator"></div>
     </div>
   </div>
   <div id="chat_container">
@@ -235,11 +249,11 @@
     </div>
     <div id="playlist_header">
       <div id="playlist_header_content" class="form-group">
-        <form id="playlist_form" action="">
+        <form id="playlist_form" action="#">
           <div class="input-group">
-            <input id="playlist_input" class="form-control" type="text" autocomplete="off" disabled="true" placeholder="Paste URL or ID here..." />
+            <input id="playlist_input" class="form-control" type="text" autocomplete="off" disabled placeholder="Paste URL or ID here..." />
             <span class="input-group-btn">
-              <button id="playlist_input_button" class="btn btn-default" type="submit" disabled="true">Add</button>
+              <button id="playlist_input_button" class="btn btn-default" type="submit" disabled>Add</button>
             </span>
           </div>
         </form>
@@ -253,38 +267,36 @@
     <div class="spacer">
     </div>
     <div id="chat_content">
-        <ul id="chat_messages"></ul>
+      <ul id="chat_messages"></ul>
     </div>
     <div id="chat_input_container">
-      <div id="chat_input_container_content">
-        <span id="chat_settings_container" class="input-group-btn">
-          <div class="dropup">
-            <button class="btn btn-default dropdown-toggle chat_settings_button" type="button" data-toggle="dropdown" />
-            <span class="glyphicon glyphicon-wrench "></span></button>
-            <ul class="dropdown-menu chat-settings">
-              <li>
-                <form action="" id="name_form">
-                  <div class="input-group">
-                    <input id="name_input" class="form-control" type="text" autocomplete="off" placeholder="Enter a new name" />
-                    <span class="input-group-btn">
-                      <button class="btn btn-default" type="submit">Ok</button>
-                    </span>
-                  </div>
-                </form>
-              </li>
-            </ul>
-          </div>
-        </span>
-        <form action="" id="chat_form">
-          <div class="input-group">
-            <input id="chat_input" class="form-control" type="text" autocomplete="off" placeholder="Write your message here..." />
-            <span class="input-group-btn">
-              <button class="btn btn-default" type="submit">Send</button>
-            </span>
-          </div>
-        </form>
+      <div id="chat_settings_container" class="input-group-btn dropup">
+        <button class="btn btn-default dropdown-toggle chat_settings_button" type="button" data-toggle="dropdown">
+          <span class="glyphicon glyphicon-wrench "></span>
+        </button>
+        <ul class="dropdown-menu chat-settings">
+          <li>
+            <form action="#" id="name_form">
+              <div class="input-group">
+                <input id="name_input" class="form-control" type="text" autocomplete="off" placeholder="Enter a new name" />
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="submit">Ok</button>
+                </span>
+              </div>
+            </form>
+          </li>
+        </ul>
       </div>
+      <form action="#" id="chat_form">
+        <div class="input-group">
+          <input id="chat_input" class="form-control" type="text" autocomplete="off" placeholder="Write your message here..." />
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="submit">Send</button>
+          </span>
+        </div>
+      </form>
     </div>
+  </div>
 
 
     <script>
