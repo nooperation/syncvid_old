@@ -9,25 +9,6 @@ var rooms = {};
 
 app.set('port', (process.env.PORT || 3000));
 
-app.get('/fonts/glyphicons-halflings-regular.woff2', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2');
-});
-app.get('/fonts/glyphicons-halflings-regular.woff', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/bootstrap/dist/fonts/glyphicons-halflings-regular.woff');
-});
-app.get('/css/bootstrap.min.css', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/bootstrap/dist/css/bootstrap.min.css');
-});
-app.get('/js/bootstrap.min.js', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js');
-});
-app.get('/js/socket.io.slim.min.js', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/socket.io-client/dist/socket.io.slim.min.js');
-});
-app.get('/js/jquery.slim.min.js', function (req, res) {
-  res.sendFile(__dirname + '/node_modules/jquery/dist/jquery.slim.min.js');
-});
-
 app.get('/', function (req, res) {
   res.redirect('/room/' + shortid.generate());
 });
