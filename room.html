@@ -28,8 +28,23 @@
       width: 320px;
       height: 100%;
     }
+    #player_container_with_seperator {
+      display: table;
+      width: 100%;
+      height: 100%;
+    }
+    #seperator {
+      background-color: transparent;
+      width: 16px;
+      cursor: col-resize;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+    }
 
     #player_container {
+      display: table-cell;
       overflow: hidden;
       height: 100%;
       z-index: 4;
@@ -197,12 +212,20 @@
     .message_type_USER {
       font-style: normal;
     }
+
+    #playlist_list_content .panel-info {
+      overflow: hidden;
+      height: auto;
+    }
   </style>
 </head>
 
 <body>
-  <div id="player_container">
-    <div id="player"></div>
+  <div id="player_container_with_seperator">
+    <div id="player_container">
+      <div id="player"></div>
+      <div id="seperator" />
+    </div>
   </div>
   <div id="chat_container">
     <div id="chat_header">
@@ -271,6 +294,87 @@
       var user_name = null;
       var is_owner = false;
       var update_timer = null;
+
+      var kDefaultChatWidth = 320;
+      var kMinChatWidth = 200;
+      var chat_width = kDefaultChatWidth;
+      var seperator_width = $('#seperator').width();
+
+      resizeChatWindow(chat_width);
+
+      var is_dragging = false;
+      $('#seperator').mousedown(function(e){
+        is_dragging = true;
+
+        $(document.body).css('user-select', 'none');
+        $(document.body).css('pointer-events', 'none');
+
+        initial = {
+          x: e.clientX,
+          y: e.ClientY
+        };
+      })
+      $('#seperator').mouseover(function(e){
+        $('#seperator').css('background-color', 'red');
+      })
+      $('#seperator').mouseout(function(e){
+        $('#seperator').css('background-color', 'transparent');
+      });
+
+      $(window).mouseup(function(e){
+        if(is_dragging){
+          is_dragging = false;
+
+          $(document.body).css('user-select', 'text');
+          $(document.body).css('pointer-events', 'all');
+
+          var diff = initial.x - e.clientX;
+          var window_width = $(window).width();
+
+          chat_width = Math.min(chat_width + diff, window_width - seperator_width);
+
+          if(Math.abs(diff) < 1) {
+            if(chat_width <= kMinChatWidth) {
+              chat_width = kDefaultChatWidth;
+              $("#chat_container").show();
+            }
+            else {
+              chat_width = 0;
+              $("#chat_container").hide();
+            }
+          }
+          else if(chat_width <= kMinChatWidth) {
+            chat_width = 0;
+            $("#chat_container").hide();
+          }
+
+          resizeChatWindow(chat_width);
+        }
+      })
+      .mousemove(function(e){
+        if(is_dragging){
+          var diff = initial.x - e.clientX;
+          var window_width = $(window).width();
+
+          var temp_chat_width = Math.min(chat_width + diff, window_width - seperator_width);
+          if(temp_chat_width <= kMinChatWidth)
+          {
+            temp_chat_width = 0;
+            $("#chat_container").hide();
+          }
+          else
+          {
+            $("#chat_container").show();
+          }
+          resizeChatWindow(temp_chat_width);
+        }
+      })
+      .resize(function(e){
+        var window_width = $(window).width();
+        chat_width = Math.min(chat_width, window_width - seperator_width);
+
+        resizeChatWindow(chat_width);
+      });
       
       // 2. This code loads the IFrame Player API code asynchronously.
       var player_tag = document.createElement('script');
@@ -323,7 +427,9 @@
         var body = $('body');
         var chat_container = $('#chat_container');
         var chat_messages = $('#chat_messages');
+        var seperator = $('#seperator');
 
+        seperator.css('right', width);
         chat_container.css('width', width);
         chat_messages.css('width', width);
         body.css('padding-right', width);
