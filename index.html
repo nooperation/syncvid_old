@@ -22,13 +22,12 @@
       height: 100%;
       overflow: hidden;
     }
-    #background-image {
+    #background_image {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background-image: url("background.jpg");
       background-repeat: no-repeat;
       background-size: cover;
       filter: blur(5px) brightness(0.4);
@@ -61,7 +60,7 @@
 </head>
 
 <body>
-  <div id="background-image"></div>
+  <div id="background_image"></div>
   <div id="content">
     <form id="create_room_form">
       <div class="">
@@ -76,6 +75,21 @@
     var user_name = null;
     var suggested_room_name = null;
     var using_custom_room_name = false;
+
+    var backgrounds = [
+      'http://i.imgur.com/LisIItZ.jpg',
+      'http://i.imgur.com/Yh77OEB.jpg',
+      'http://i.imgur.com/dw1cJQr.jpg',
+      'http://i.imgur.com/QU0RN0T.jpg',
+      'http://i.imgur.com/M67H98p.jpg',
+      'http://i.imgur.com/3hNB69g.jpg',
+      'http://i.imgur.com/KVbcrir.jpg',
+      'http://i.imgur.com/KYzlrYz.jpg',
+      'http://i.imgur.com/VEFElM3.jpg',
+      'http://i.imgur.com/jqvpQGr.jpg',
+    ];
+    var background_num = Math.round(Math.random() * backgrounds.length);
+    $('#background_image').css('background-image', 'url("' + backgrounds[background_num] + '")');
 
     $('#room_name').click(function(e) { 
       var room_name_element = $('#room_name');
