@@ -303,12 +303,14 @@
       var is_owner = false;
       var update_timer = null;
 
+      var kMaxNameLength = 20;
       var kDefaultChatWidth = 320;
       var kMinChatWidth = 200;
       var chat_width = kDefaultChatWidth;
       var seperator_width = $('#seperator').width();
 
       resizeChatWindow(chat_width);
+      $('#name_input').attr('maxlength', kMaxNameLength);
 
       var is_dragging = false;
       $('#seperator').mousedown(function(e){
@@ -514,7 +516,7 @@
 
       $('#name_form').submit(function(){
         var name_input = $('#name_input');
-        var new_name = name_input.val().trim();
+        var new_name = name_input.val().trim().substring(0, kMaxNameLength);
         if(name_input.length > 0)
         {
           socket.emit('change_username', new_name);

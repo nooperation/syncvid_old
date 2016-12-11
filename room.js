@@ -228,7 +228,9 @@ var Room = function (room_name) {
   };
 
   this.ChangeUsername = function (user_socket, new_username) {
-    if (new_username.trim().length == 0 || this.IsUsernameInUse(new_username)) {
+    var kMaxNameLength = 20;
+    new_username = new_username.trim().substring(0, kMaxNameLength);
+    if (new_username.length == 0 || this.IsUsernameInUse(new_username)) {
       user_socket.emit('change_username_result', false);
       return;
     }
