@@ -87,7 +87,7 @@
       'https://i.imgur.com/KYzlrYz.jpg',
       'https://i.imgur.com/VEFElM3.jpg',
     ];
-    var background_num = Math.round(Math.random() * backgrounds.length);
+    var background_num = Math.round(Math.random() * (backgrounds.length - 1));
     $('#background_image').css('background-image', 'url("' + backgrounds[background_num] + '")');
 
     $('#room_name').click(function(e) { 
