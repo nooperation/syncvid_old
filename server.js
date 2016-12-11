@@ -10,7 +10,7 @@ var rooms = {};
 app.set('port', (process.env.PORT || 3000));
 
 app.get('/', function (req, res) {
-  res.redirect('/room/' + shortid.generate());
+  res.sendFile(__dirname + '/index.html');
 });
 app.get('/room', function (req, res) {
   res.redirect('/room/' + shortid.generate());
@@ -29,7 +29,12 @@ io.on('connection', function (socket) {
       return;
     }
 
-    socket.room.RemoveUser(socket);
+    var room = socket.room;
+    room.RemoveUser(socket);
+
+    if (room.users.length == 0) {
+      delete rooms[room.room_name];
+    }
   });
 
   socket.on('join', function (user_name, room_name) {
@@ -120,6 +125,40 @@ io.on('connection', function (socket) {
     }
 
     socket.room.ChangeUsername(socket, new_username);
+  });
+
+  socket.on('get_roomlist', function () {
+    var room_list = [];
+    for (var room_name in rooms) {
+      var room = rooms[room_name];
+      room_list.push({
+        name: room_name,
+        population: room.users.length
+      });
+    }
+    io.emit('roomlist', room_list);
+  });
+
+  function getUnusedRoomName() {
+    var room_name = shortid.generate();
+
+    for (var i = 0; i < 100; ++i) {
+      if (room_name in rooms == false) {
+        return room_name;
+      }
+      room_name = shortid.generate();
+    }
+
+    // Giving up
+    return room_name;
+  }
+
+  socket.on('init_frontpage', function () {
+    var unused_room_name = getUnusedRoomName();
+
+    socket.emit('init_frontpage_complete', {
+      suggested_room_name: unused_room_name
+    });
   });
 });
 

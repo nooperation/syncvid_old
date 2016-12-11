@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <title>SyncVid</title>
+  <script
+    src="https://code.jquery.com/jquery-3.1.1.slim.min.js"
+    integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+    crossorigin="anonymous"></script>
+  <script
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+    integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+  <link
+    rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.1/socket.io.slim.min.js"></script>
+  <style>
+    body, html {
+      height: 100%;      
+    }
+    #asdf {
+      display: table;
+      height: 100%;
+      margin: 0 auto;
+    }
+    #create_room_form {
+      display: table-cell;
+      vertical-align: middle;
+      width: 300px;
+    }
+    #room_name {
+      font-size: 24px;
+      height: 50px;
+      margin-bottom: 10px;
+    }
+    #room_list_container {
+      position: absolute;
+      right: 32px;
+      top: 32px;
+      bottom: 0px;
+      width: 300px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="asdf">
+  <form id="create_room_form">
+    <div class="">
+      <input type="text" class="form-control text-center" id="room_name" placeholder="Enter room name">
+      <button type="submit" class="btn btn-primary btn-lg center-block">Create Room</button>
+    </div>
+  </form>
+  </div>
+
+  <script>
+    var socket = io();
+    var user_name = null;
+    var suggested_room_name = null;
+    var using_custom_room_name = false;
+
+    $('#room_name').click(function(e) { 
+      var room_name_element = $('#room_name');
+      if(using_custom_room_name == false) {
+        using_custom_room_name = true;
+        room_name_element.val('');
+      }
+    });
+
+    $('#room_name').blur(function(e) {
+      var room_name_element = $('#room_name');
+      var room_name = room_name_element.val().trim();
+      if(room_name.length == 0) {
+        room_name_element.val(suggested_room_name);
+        using_custom_room_name = false;
+      }
+    });
+
+    $('#create_room_form').submit(function(){
+      var room_name = $('#room_name').val().trim();
+      if(room_name.length > 0) {
+        window.location.href = '/room/' + room_name;
+      }
+      return false;
+    });
+
+    socket.emit('init_frontpage');
+
+    socket.on('init_frontpage_complete', function(data){
+      suggested_room_name = data.suggested_room_name;
+      $('#room_name').attr('value', suggested_room_name);
+    });
+
+    socket.on('roomlist', function(rooms) {
+      var room_list = $('#room_list');
+      room_list.text('');
+      rooms.sort(function(left, right){
+        return left.population < right.population;
+      });
+      if(rooms.length == 0){
+        room_list.text('No rooms');
+      }
+      else {
+        for(var i = 0; i < rooms.length; ++i){
+          var new_room = $('<li>');
+
+          var room_link = $('<a>');
+          room_link.attr('href', "/room/" + rooms[i].name);
+          room_link.text(rooms[i].name);
+
+          new_room.append(room_link);
+          new_room.append($('<p>').text(rooms[i].population));
+
+          room_list.append(new_room);
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
