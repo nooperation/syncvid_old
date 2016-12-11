@@ -55,9 +55,6 @@ var Room = function (room_name) {
         var new_owner = this.users[0];
         this.SetOwner(new_owner);
       }
-      else {
-        console.log('Room "' + this.room_name + '" is now empty.');
-      }
     }
 
     this.SendUpdateUserList();

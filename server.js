@@ -39,7 +39,6 @@ io.on('connection', function (socket) {
 
   socket.on('join', function (user_name, room_name) {
     if (room_name in rooms == false) {
-      console.log('Creating new room "' + room_name + '"');
       rooms[room_name] = new Room(room_name);
     }
     var room = rooms[room_name];
