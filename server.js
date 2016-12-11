@@ -9,6 +9,11 @@ var rooms = {};
 
 app.set('port', (process.env.PORT || 3000));
 
+app.get('/background.jpg', function (req, res) {
+  var kNumImages = 10;
+  var image_number = Math.floor(Math.random() * kNumImages);
+  res.sendFile(__dirname + '/static/' + image_number + '.jpg');
+});
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
