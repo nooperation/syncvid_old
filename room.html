@@ -18,6 +18,7 @@
     crossorigin="anonymous">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.1/socket.io.slim.min.js"></script>
+
   <style>
     #chat_container {
       position: absolute;
@@ -218,6 +219,27 @@
       border-bottom-right-radius: 0px;
       border-right-width: inherit;
     }
+    .channel_settings_button {
+      height: 100%;
+      width: 100%;
+
+      display: inline-block;
+      padding: 8px 10px;
+      margin-bottom: 0;
+      font-size: 18px;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      color: black;
+    }
+    .channel_settings_button:hover {
+      color: red;
+    }
 
     .message_type_SYSTEM {
       font-style: italic;
@@ -231,6 +253,40 @@
       overflow: hidden;
       height: auto;
     }
+
+    #channel_settings {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: auto;
+      height: 100%;
+      padding: 2px;
+    }
+
+    .dropdown-menu.channel-settings {
+      width: 280px;
+      padding: 5px;
+    }
+
+    #chat_header .well {
+      margin-bottom: 0px;
+    }
+
+    #chat_header_usercount {
+      position: absolute;
+      right: 13px;
+      top: 0;
+      width: 32px;
+      height: 100%;
+      display: inline-block;
+      padding: 11px 0px;
+      margin-bottom: 0;
+      font-size: 18px;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      color: black;
+    }
   </style>
 </head>
 
@@ -243,7 +299,22 @@
   </div>
   <div id="chat_container">
     <div id="chat_header">
-      <div id="chat_header_content" class="text-center well well-sm"></div>
+      <div class="text-center well well-sm">
+        <div id="channel_settings" class="input-group-btn dropdown hidden">
+          <a class="channel_settings_button" type="button" data-toggle="dropdown">
+            <span class="glyphicon glyphicon-tasks"></span>
+          </a>
+          <ul class="dropdown-menu channel-settings">
+            <li>
+              <div>
+                TODO
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div id="chat_header_content"></div>
+        <div id="chat_header_usercount"></div>
+      </div>
     </div>
     <div id="playlist_header">
       <div id="playlist_header_content" class="form-group">
@@ -385,7 +456,6 @@
 
         resizeChatWindow(chat_width);
       });
-      
 
       var player_tag = document.createElement('script');
       player_tag.src = "https://www.youtube.com/iframe_api";
@@ -612,7 +682,7 @@
       });
 
       socket.on('update_user_list', function(updated_userlist){
-        // TODO: remove?
+        $("#chat_header_usercount").text(updated_userlist.length);
       });
 
       socket.on('play_playlist_item', function(playlist_item_data){
