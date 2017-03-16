@@ -24,8 +24,6 @@ logger.configure({
   ]
 });
 
-logger.info('Starting server...');
-
 app.set('port', (process.env.PORT || 3000));
 
 app.get('/background.jpg', function (req, res) {
@@ -189,5 +187,5 @@ io.on('connection', function (socket) {
 
 
 http.listen(app.get('port'), function () {
-  console.log('listening on ' + app.get('port'));
+  logger.info('http.listen', { 'Port': app.get('port') });
 });

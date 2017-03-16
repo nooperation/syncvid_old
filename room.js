@@ -40,13 +40,13 @@ var Room = function (room_name) {
 
   this.RemoveUser = function (user_socket) {
     if (user_socket.room != this) {
-      console.error('User attempted to leave the wrong room.');
+      logger.error('Room.RemoveUser - User attempted to leave the wrong room.', { 'Room': this.room_name, 'Username': user_socket.user_name } );
       return;
     }
 
     user_index = this.users.indexOf(user_socket);
     if (user_index == -1) {
-      console.error('User attempted to leave room they were assigned to, but room has no knowledge of them.');
+      logger.error('Room.RemoveUser - User attempted to leave room they were assigned to, but room has no knowledge of them.', { 'Room': this.room_name, 'Username': user_socket.user_name } );
       return;
     }
 
@@ -105,7 +105,7 @@ var Room = function (room_name) {
     });
 
     if (item_index_to_play == -1) {
-      console.warn('Attempted to play an unknown video: ' + unique_id);
+      logger.warn('Room.SelectPlaylistItem - Attempted to play an unknown video', { 'Room': this.room_name, 'Username': user_socket.user_name, 'UniqueId': unique_id });
       return;
     }
 
@@ -147,7 +147,7 @@ var Room = function (room_name) {
     });
 
     if (item_index_to_remove == -1) {
-      console.warn('Attempted to remove an unknown video: ' + unique_id);
+      logger.warn('Room.RemovePlaylistItem - Attempted to remove an unknown video', { 'Room': this.room_name, 'Username': user_socket.user_name, 'UniqueId': unique_id });
       return;
     }
 
