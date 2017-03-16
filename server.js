@@ -7,6 +7,25 @@ var generateName = require('sillyname');
 
 var rooms = {};
 
+var logger = require('winston');
+
+logger.configure({
+ transports: [
+    new (logger.transports.Console)({
+      timestamp: function() {
+        return new Date(Date.now()).toISOString();
+      },
+      formatter: function(options) {
+        // Return string will be passed to logger.
+        return '[' + options.timestamp() + '] ' + options.level.toUpperCase() + ' '+ (options.message ? options.message : '') +
+          (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+      }
+    })
+  ]
+});
+
+logger.info('Starting server...');
+
 app.set('port', (process.env.PORT || 3000));
 
 app.get('/background.jpg', function (req, res) {
@@ -38,6 +57,7 @@ io.on('connection', function (socket) {
     room.RemoveUser(socket);
 
     if (room.users.length == 0) {
+      logger.info('Server.disconnect.delete_room', { 'Room': room.room_name });
       delete rooms[room.room_name];
     }
   });
@@ -45,6 +65,7 @@ io.on('connection', function (socket) {
   socket.on('join', function (user_name, room_name) {
     if (room_name in rooms == false) {
       rooms[room_name] = new Room(room_name);
+      logger.info('Server.join.create_room', { 'Room': room_name });
     }
     var room = rooms[room_name];
 

@@ -1,6 +1,7 @@
 
 var request = require('request');
 var shortid = require('shortid');
+var logger = require('winston');
 
 var io = null;
 
@@ -33,6 +34,8 @@ var Room = function (room_name) {
     this.SendUpdateUserList();
     this.SendUpdatePlaylist();
     this.SendSystemMessage(user_socket.user_name + ' joined the room.');
+    logger.info('Room.AddUser', { 'Room': this.room_name, 'Username': user_socket.user_name });
+
   };
 
   this.RemoveUser = function (user_socket) {
@@ -59,6 +62,7 @@ var Room = function (room_name) {
 
     this.SendUpdateUserList();
     this.SendSystemMessage(user_socket.user_name + ' left the room.');
+    logger.info('Room.RemoveUser', { 'Room': this.room_name, 'Username': user_socket.user_name });
 
     user_socket.leave(this.room_name);
     user_socket.room = null;
@@ -108,6 +112,7 @@ var Room = function (room_name) {
     var item_to_play = this.playlist[item_index_to_play];
     this.SendSystemMessage(user_socket.user_name + ' changed the video to "' + item_to_play.title + '"');
     this.PlayPlaylistItem(item_index_to_play);
+    logger.info('Room.SelectPlaylistItem', { 'Room': this.room_name, 'User': user_socket.user_name });
   };
 
   this.PlayPlaylistItem = function (item_index_to_play) {
@@ -130,6 +135,8 @@ var Room = function (room_name) {
     }
 
     var item_to_play = this.playlist[item_index_to_play];
+    logger.info('Room.PlayPlaylistItem', { 'Room': this.room_name, 'ID': item_to_play.video_id, 'Name': item_to_play.title});
+
     this.SendUpdatePlaylist();
     io.to(this.room_name).emit('play_playlist_item', item_to_play);
   };
@@ -145,6 +152,7 @@ var Room = function (room_name) {
     }
 
     this.SendSystemMessage(user_socket.user_name + ' removed "' + this.playlist[item_index_to_remove].title + '" from the playlist');
+    logger.info('Room.RemovePlaylistItem', {'Room': this.room_name, 'User': user_socket.user_name, 'ID': this.playlist[item_index_to_remove].video_id, 'Name': this.playlist[item_index_to_remove].title});
 
     this.playlist.splice(item_index_to_remove, 1);
     this.SendUpdatePlaylist();
@@ -210,6 +218,7 @@ var Room = function (room_name) {
       video_details.url = 'https://www.youtube.com/watch?v=' + video_id;
       video_details.unique_id = shortid.generate();
       video_details.state = 'Queued';
+      logger.info('Room.QueuePlaylistItem', {'Room': this_room.room_name, 'User': user_socket.user_name, 'ID': video_details.video_id, 'Name': video_details.title });
 
       var should_play_this_video = false;
       if (this_room.playlist.length == 0 || this_room.playlist[this_room.playlist.length - 1].state == 'Played') {
@@ -238,7 +247,7 @@ var Room = function (room_name) {
     var old_username = user_socket.user_name;
     var username_index = this.usernames.indexOf(old_username);
     if (username_index == -1) {
-      console.warn('Unknown user ' + old_username + ' attempted to change name to ' + new_username);
+      logger.warn('Room.ChangeUsername: Unknown user attempted to change their name', { 'Room': this.room_name, 'User': user_socket.user_name, 'OldUsername': old_username });
       user_socket.emit('change_username_result', false);
       return;
     }
@@ -247,6 +256,7 @@ var Room = function (room_name) {
     user_socket.user_name = new_username;
     user_socket.emit('change_username_result', true);
     this.SendSystemMessage(old_username + ' changed their name to ' + new_username);
+    logger.info('Room.ChangeUsername', {'Room': this.room_name, 'User': user_socket.user_name, 'From': old_username, 'To': new_username});
   };
 
   this.IsUsernameInUse = function (username) {
