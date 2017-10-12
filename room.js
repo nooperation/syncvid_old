@@ -1,10 +1,10 @@
 
-module.exports = function (io) {
+module.exports = function () {
   var request = require('request');
   var shortid = require('shortid');
   var logger = require('winston');
 
-  return function (room_name) {
+  return function (room_name, io) {
     this.room_name = room_name;
     this.description = 'Untitled Room';
     this.owner = null;
@@ -12,6 +12,7 @@ module.exports = function (io) {
     this.usernames = [];
     this.playlist = [];
     this.current_playlist_index = -1;
+    this.io = io;
 
     this.AddUser = function (user_socket) {
       this.users.push(user_socket);
@@ -79,19 +80,19 @@ module.exports = function (io) {
     };
 
     this.SendMessage = function (message, user_socket, user_color) {
-      io.to(this.room_name).emit('message', 'USER', message, user_socket.user_name, user_color);
+      this.io.to(this.room_name).emit('message', 'USER', message, user_socket.user_name, user_color);
     };
 
     this.SendSystemMessage = function (message) {
-      io.to(this.room_name).emit('message', 'SYSTEM', message, 'Server', '#000000');
+      this.io.to(this.room_name).emit('message', 'SYSTEM', message, 'Server', '#000000');
     };
 
     this.SendUpdateUserList = function () {
-      io.to(this.room_name).emit('update_user_list', this.usernames);
+      this.io.to(this.room_name).emit('update_user_list', this.usernames);
     };
 
     this.SendUpdatePlaylist = function () {
-      io.to(this.room_name).emit('update_playlist', this.playlist);
+      this.io.to(this.room_name).emit('update_playlist', this.playlist);
     };
 
     this.SetPlayerState = function (user_socket, new_state) {
@@ -137,7 +138,7 @@ module.exports = function (io) {
       logger.info('Room.PlayPlaylistItem', { 'Room': this.room_name, 'ID': item_to_play.video_id, 'Name': item_to_play.title});
 
       this.SendUpdatePlaylist();
-      io.to(this.room_name).emit('play_playlist_item', item_to_play);
+      this.io.to(this.room_name).emit('play_playlist_item', item_to_play);
     };
 
     this.RemovePlaylistItem = function (user_socket, unique_id) {

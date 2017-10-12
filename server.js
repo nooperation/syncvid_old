@@ -1,10 +1,8 @@
 
 module.exports = function (io, logger) {
-  var shortid = require('shortid');
-  var generateName = require('sillyname');
-  var Room = require('./room')(io);
+  var RoomList = require('./room_list')(logger, io);
 
-  var rooms = {};
+  var room_list = new RoomList();
 
   return function (socket) {
     socket.user_name = null;
@@ -20,33 +18,29 @@ module.exports = function (io, logger) {
       room.RemoveUser(socket);
 
       if (room.users.length == 0) {
-        logger.info('Server.disconnect.delete_room', { 'Room': room.room_name });
-        delete rooms[room.room_name];
+        room_list.delete(room.name);
       }
     });
 
     socket.on('join', function (user_name, room_name) {
-      if (room_name in rooms == false) {
-        rooms[room_name] = new Room(room_name);
-        logger.info('Server.join.create_room', { 'Room': room_name });
-      }
-      var room = rooms[room_name];
-
-      if (user_name == null || room.IsUsernameInUse(user_name)) {
-        for (var i = 0; i < 100; ++i) {
-          var temp_name = generateName();
-          if (room.IsUsernameInUse(temp_name) == false) {
-            user_name = temp_name;
-            break;
-          }
-        }
-        if (user_name == null) {
-          user_name = 'Guest';
-        }
-      }
+      var room = room_list.get_or_create(room_name);
+      var user_name = room_list.get_or_create_username(room_name, user_name);
 
       socket.user_name = user_name;
       room.AddUser(socket);
+    });
+
+    socket.on('get_roomlist', function () {
+      var room_list_json = room_list.get_list_json();
+      io.emit('roomlist', room_list_json);
+    });
+
+    socket.on('init_frontpage', function () {
+      var unused_room_name = room_list.get_unused_room_name();
+
+      socket.emit('init_frontpage_complete', {
+        suggested_room_name: unused_room_name
+      });
     });
 
     socket.on('message', function (message, user_color) {
@@ -89,40 +83,6 @@ module.exports = function (io, logger) {
       if (socket.valid) {
         socket.room.ChangeUsername(socket, new_username);
       }
-    });
-
-    socket.on('get_roomlist', function () {
-      var room_list = [];
-      for (var room_name in rooms) {
-        var room = rooms[room_name];
-        room_list.push({
-          name: room_name,
-          population: room.users.length
-        });
-      }
-      io.emit('roomlist', room_list);
-    });
-
-    function getUnusedRoomName() {
-      var room_name = shortid.generate();
-
-      for (var i = 0; i < 100; ++i) {
-        if (room_name in rooms == false) {
-          return room_name;
-        }
-        room_name = shortid.generate();
-      }
-
-      // Giving up
-      return room_name;
-    }
-
-    socket.on('init_frontpage', function () {
-      var unused_room_name = getUnusedRoomName();
-
-      socket.emit('init_frontpage_complete', {
-        suggested_room_name: unused_room_name
-      });
     });
   }
 };
